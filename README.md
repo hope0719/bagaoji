@@ -15,6 +15,10 @@ python3 -m bagaoji "https://xhslink.cn/o/xxxxxxxx" --download --out ~/Desktop/�
 
 不需要 `pip install` 任何东西，不需要任何平台的 API Key，不产生任何调用费用。
 
+> 📖 **不想看代码，只想先把它跑起来？**
+> 看 **[docs/community.md](docs/community.md)** —— 面向使用者的图文步骤说明
+> （含 Windows 指引、链接怎么拿、常见问题），可以直接转发给朋友。
+
 ---
 
 ## 目录
