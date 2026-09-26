@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.eggs/
+.venv/
+venv/
+
+# 本地产物
+out/
+media/
+downloads/
+扒稿/
+
+# 编辑器 / 系统
+.DS_Store
+.idea/
+.vscode/
+*.swp
