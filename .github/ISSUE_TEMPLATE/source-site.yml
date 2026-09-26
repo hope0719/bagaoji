@@ -1,0 +1,69 @@
+name: 投稿来源站
+description: 提交一个视频/笔记解析、去水印、文案提取类站点，或修正既有条目的状态
+title: "[投稿] 站点名称"
+labels: ["来源投稿"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **不需要你会写代码，也不需要你读过源码。** 给个链接、说清现象就够了，
+        核验、记录、接入由维护者来做。
+
+        提醒：请**不要**在这里粘贴任何 Cookie、令牌或账号信息。
+  - type: input
+    id: site-name
+    attributes:
+      label: 站点名称
+      placeholder: 例如：某某解析
+    validations:
+      required: true
+  - type: input
+    id: site-url
+    attributes:
+      label: 站点链接
+      placeholder: https://example.com/
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: 投稿类型
+      options:
+        - 新来源站
+        - 现状修正（改版 / 恢复 / 已停用）
+        - 适配器实现（我自己写好了）
+        - 踩坑记录
+    validations:
+      required: true
+  - type: input
+    id: usage
+    attributes:
+      label: 你用它做什么
+      placeholder: 例如：下抖音无水印视频 / 提取小红书图文正文
+    validations:
+      required: true
+  - type: dropdown
+    id: login
+    attributes:
+      label: 是否需要登录
+      options:
+        - 免登录
+        - 需要登录
+        - 不确定
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: 你的实测结果
+      description: 贴链接之后发生了什么？（成功/失败的现象越具体越好）
+      placeholder: 例如：粘贴 B 站链接后返回了 1080P 的 mp4 直链，可以直接下载；但同一站解析小红书只给出封面图。
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: 补充说明（可选）
+      description: 额度、限制、你踩过的坑、你发现的有效/无效用法
+    validations:
+      required: false

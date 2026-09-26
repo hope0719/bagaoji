@@ -1,0 +1,29 @@
+name: 其他问题 / 建议
+description: 不限于来源投稿的 bug 报告、功能建议或使用问题
+title: ""
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        提问前可以先看一眼：
+        - [README](https://github.com/hope0719/bagaoji#readme) 的能力边界一节
+        - [来源站公示](https://github.com/hope0719/bagaoji/blob/main/docs/sites.md)
+        - `python3 -m bagaoji --diagnose` 与 `python3 -m bagaoji --auth`
+
+        提醒：提交日志或截图前请**抹掉 Cookie 与令牌**。
+  - type: textarea
+    id: what
+    attributes:
+      label: 你想说什么
+      description: 出问题的现象、期望的行为，或你的建议
+    validations:
+      required: true
+  - type: textarea
+    id: env
+    attributes:
+      label: 环境与复现命令（可选）
+      description: 系统、Python 版本、执行的完整命令
+      placeholder: 例如：macOS 14 / Python 3.9.6 / python3 -m bagaoji --download "链接"
+    validations:
+      required: false

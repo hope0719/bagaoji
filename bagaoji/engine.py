@@ -24,6 +24,9 @@ def describe():
     for a in all_adapters():
         flag = "免登录" if a.login_free else "需登录"
         lines.append("  %-8s %-6s %-4s  %s" % (a.name, a.label or "-", flag, a.note or ""))
+        hint = getattr(a, "auth_hint", "")
+        if hint:
+            lines.append("  %-8s %-6s %-4s  └─ 登录态：%s" % ("", "", "", hint))
     return "\n".join(lines) or "  （无）"
 
 

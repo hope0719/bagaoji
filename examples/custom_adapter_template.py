@@ -21,8 +21,9 @@ class MySourceAdapter(Adapter):
     name = "mysource"
     label = "我的来源"
     domains = ("example.com",)          # ← 记得覆盖该来源的全部域名（含短链域名）
-    login_free = True
+    login_free = True                   # ← 需要登录就写 False，别写 True 糊弄过去
     note = "替换成一句话说明"
+    auth_hint = ""                      # ← 需要登录时，写清"登录后能多得到什么"
 
     def parse(self, url, timeout=30, **opts):
         res = MediaResult(
@@ -31,6 +32,17 @@ class MySourceAdapter(Adapter):
             platform_label=self.label,
             source="%s/api" % self.name,
         )
+
+        # ---- 0) 登录态（可选）------------------------------------------------
+        # 需要登录的来源：用这一行取凭据，不要自己读文件或环境变量。
+        # 用户的 --cookie / --cookie-file / BAGAOJI_COOKIE / ~/.bagaoji/cookies.*
+        # 四种传入方式会自动收敛到这里。
+        cookie = self.cookie(**opts)
+        if not self.login_free and cookie is None:
+            res.error = ("该来源需要登录态。请用 --cookie 传入，"
+                         "或写入 ~/.bagaoji/cookies.json —— 详见 README「关于 Cookie」一节。")
+            return res
+        # ---------------------------------------------------------------------
 
         # ---- 1) 你的解析逻辑 -------------------------------------------------
         # 建议：把网络请求包在 try 里，失败时写 res.error 返回，不要抛异常，
@@ -67,7 +79,8 @@ class MySourceAdapter(Adapter):
     def _fetch(self, url, timeout):
         """占位：替换成你自己的实现。
 
-        注意：不要在这里硬编码任何凭据。需要登录态时，从环境变量或参数读入。
+        注意：不要在这里硬编码任何凭据；需要登录态时用 `self.cookie(**opts)` 取，
+        且不要把凭据写进日志、异常信息或返回值里（展示用 `bagaoji.auth.mask()`）。
         """
         raise NotImplementedError("请实现 _fetch")
 

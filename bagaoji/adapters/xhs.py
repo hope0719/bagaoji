@@ -99,13 +99,20 @@ def note_id_of(url):
     return m.group(1) if m else None
 
 
-def _http_get(url, timeout=30):
-    """GET 并解 gzip，返回 `(最终地址, HTML 文本)`。"""
-    req = urllib.request.Request(url, headers={
+def _http_get(url, timeout=30, cookie=None):
+    """GET 并解 gzip，返回 `(最终地址, HTML 文本)`。
+
+    `cookie` 可选：本专线免登录即可工作，带上登录态只是让风控场景更稳
+    （区分"笔记本身不存在"与"被风控拦"时很有用）。
+    """
+    headers = {
         "User-Agent": UA_MOBILE,
         "Accept-Language": "zh-CN,zh;q=0.9",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    })
+    }
+    if cookie:
+        headers["Cookie"] = cookie
+    req = urllib.request.Request(url, headers=headers)
     with urllib.request.urlopen(req, timeout=timeout) as r:
         raw = r.read()
         if (r.headers.get("Content-Encoding") or "").lower() == "gzip":
@@ -113,13 +120,13 @@ def _http_get(url, timeout=30):
         return r.geturl(), raw.decode("utf-8", "replace")
 
 
-def expand_short(url, timeout=25):
+def expand_short(url, timeout=25, cookie=None):
     """短链跟随 302，返回带 `xsec_token` 的真实地址。
 
     必须带移动端 UA，否则可能被跳到 App 下载引导页。
     """
     try:
-        final, _ = _http_get(url, timeout=timeout)
+        final, _ = _http_get(url, timeout=timeout, cookie=cookie)
         return final or url
     except Exception:
         return url
@@ -291,6 +298,8 @@ class XhsAdapter(Adapter):
     login_free = True
     note = ("短链 → 笔记页 → 内嵌 JSON。零额度、图片为无签名原图直链、"
             "图文笔记正文直取无需 ASR。")
+    #: 本专线免登录即可取到正文与原图，Cookie 只是备用（部分风控场景下更稳）。
+    auth_hint = "非必需。免登录即可取正文与原图；被风控拦截时可带上登录态 Cookie 再试。"
 
     # ------------------------------------------------------------ 解析
 
@@ -303,8 +312,12 @@ class XhsAdapter(Adapter):
             res.error = "img_mode 只能是 %s" % "/".join(IMG_MODES)
             return res
 
+        # 0) 登录态（可选）：免登录即可工作，带上只是让风控场景更稳
+        cookie = self.cookie(**opts)
+
         # 1) 短链先展开
-        note_url = expand_short(url, timeout=min(timeout, 25)) if is_short_url(url) else url
+        note_url = (expand_short(url, timeout=min(timeout, 25), cookie=cookie)
+                    if is_short_url(url) else url)
         nid = note_id_of(note_url)
         if not nid:
             res.error = ("短链未能跳转到笔记页（可能已失效）。请确认链接是在小红书 App 里"
@@ -320,7 +333,7 @@ class XhsAdapter(Adapter):
         html, last_err = None, None
         for attempt in range(max(1, retries)):
             try:
-                _, html = _http_get(note_url, timeout=timeout)
+                _, html = _http_get(note_url, timeout=timeout, cookie=cookie)
                 break
             except urllib.error.HTTPError as e:
                 last_err, html = "HTTP %s" % e.code, None

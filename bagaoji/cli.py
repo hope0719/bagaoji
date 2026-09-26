@@ -21,7 +21,7 @@ import sys
 import time
 
 from . import __version__
-from .adapters import USER_ADAPTER_DIR
+from .adapters import USER_ADAPTER_DIR, all_adapters
 from .downloader import human, pick_url
 from .engine import available_adapters, describe, parse
 from .models import MediaResult
@@ -137,7 +137,14 @@ def build_parser():
     p.add_argument("--out", metavar="DIR", help="把每条结果保存为 Markdown 到该目录")
     p.add_argument("--media-dir", metavar="DIR", help="媒体落盘目录（默认同 --out）")
     p.add_argument("--timeout", type=int, default=120, help="单文件下载超时秒数（默认 120）")
+    p.add_argument("--cookie", metavar="STR",
+                   help="本次调用使用的登录态 Cookie（形如 \"a=1; b=2\"）；"
+                        "部分来源登录后才完整可用，详见 --auth")
+    p.add_argument("--cookie-file", metavar="PATH",
+                   help="从文件读取登录态 Cookie（支持 JSON 与纯文本两种格式）")
     p.add_argument("--json", action="store_true", help="以 JSON 输出结果")
+    p.add_argument("--auth", action="store_true",
+                   help="查看登录态说明：哪些来源需要登录、怎么取 Cookie、当前已从哪些本地来源读到凭据")
     p.add_argument("--diagnose", action="store_true", help="探测各站点可用性，刷新公示表")
     p.add_argument("--list", action="store_true", help="列出已注册适配器")
     p.add_argument("-q", "--quiet", action="store_true", help="减少进度输出")
@@ -232,6 +239,27 @@ def main(argv=None):
         print("私有适配器目录：%s" % USER_ADAPTER_DIR)
         print("（放进去的 *.py 会在启动时自动加载，无需 fork 本仓库；")
         print("  接口形态见 docs/extending.md）")
+        print()
+        print("登录态：python3 -m bagaoji --auth")
+        return 0
+
+    if args.auth:
+        from .auth import GUIDE, available_sources, mask, resolve
+        print(GUIDE)
+        print("当前检测到的本地凭据来源")
+        print("-" * 40)
+        found = available_sources()
+        print("\n".join("  · %s" % f for f in found) if found
+              else "  （无。当前所有来源都将在免登录状态下工作）")
+        print()
+        print("按来源查看：")
+        for a in all_adapters():
+            c, src = resolve(a.name, explicit=args.cookie, cookie_file=args.cookie_file)
+            flag = "免登录" if a.login_free else "需登录"
+            hint = getattr(a, "auth_hint", "") or "登录与否无差别"
+            print("  · %-8s %-6s %s" % (a.name, flag, hint))
+            print("    %-8s 当前凭据：%s%s" % ("", mask(c),
+                                              ("（来源：%s）" % src) if src else ""))
         return 0
 
     if args.diagnose:
@@ -254,11 +282,19 @@ def main(argv=None):
     verbose = not args.quiet
 
     batch, all_ok = [], True
+
+    # 登录态：命令行 > 环境变量 > ~/.bagaoji/cookies.*（未提供则为 None，不影响免登录来源）
+    from .auth import resolve
+    cookie, cookie_src = resolve(explicit=args.cookie, cookie_file=args.cookie_file)
+    if cookie and verbose:
+        print("🔑 已读取登录态（来源：%s），部分来源会因此解锁更高额度或权限。"
+              % cookie_src, file=sys.stderr)
+
     for idx, u in enumerate(urls, 1):
         if verbose and len(urls) > 1:
             print("—" * 60, file=sys.stderr)
             print("[%d/%d] %s" % (idx, len(urls), u), file=sys.stderr)
-        res = parse(u, engine=args.engine, img_mode=args.img_mode)
+        res = parse(u, engine=args.engine, img_mode=args.img_mode, cookie=cookie)
         downloads = None
         if res.ok and args.download:
             from .downloader import download_media

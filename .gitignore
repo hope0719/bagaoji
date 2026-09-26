@@ -14,6 +14,13 @@ media/
 downloads/
 扒稿/
 
+# 登录态凭据 —— 绝对不要提交
+cookies.json
+cookies.txt
+my_cookie.txt
+*.cookie
+.bagaoji/
+
 # 编辑器 / 系统
 .DS_Store
 .idea/
