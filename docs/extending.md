@@ -127,8 +127,8 @@ auth_hint = "登录后额度更高，且解锁 1080P"  # 登录态的收益；�
 ```json
 {
   "_default": "留给没有单独配置的来源",
-  "kaolajiexi": "该来源专用",
-  "xzgtool": "另一个来源专用"
+  "source_a": "来源 A 专用",
+  "source_b": "来源 B 专用"
 }
 ```
 

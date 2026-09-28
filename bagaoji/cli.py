@@ -8,7 +8,7 @@
     python3 -m bagaoji "https://xhslink.cn/o/xxxx"                  # 取文案（图文笔记直取正文）
     python3 -m bagaoji --download "短链" --out ~/Desktop/扒稿        # 顺带把原图/原片落盘
     python3 -m bagaoji --download --only image --img-mode raw "短链" # 只要最高画质原图
-    python3 -m bagaoji --diagnose                                   # 刷新站点可用性公示
+    python3 -m bagaoji --diagnose                                   # 探测来源可用性
     python3 -m bagaoji --list                                       # 看已注册适配器
 """
 
@@ -145,7 +145,8 @@ def build_parser():
     p.add_argument("--json", action="store_true", help="以 JSON 输出结果")
     p.add_argument("--auth", action="store_true",
                    help="查看登录态说明：哪些来源需要登录、怎么取 Cookie、当前已从哪些本地来源读到凭据")
-    p.add_argument("--diagnose", action="store_true", help="探测各站点可用性，刷新公示表")
+    p.add_argument("--diagnose", action="store_true",
+                   help="探测各来源站可用性（发布版可能未启用）")
     p.add_argument("--list", action="store_true", help="列出已注册适配器")
     p.add_argument("-q", "--quiet", action="store_true", help="减少进度输出")
     p.add_argument("--version", action="version", version="bagaoji %s" % __version__)
@@ -196,7 +197,7 @@ def _emit(res, args, downloads=None):
             L.append(res.transcript)
         elif res.kind == "video":
             L.append("")
-            L.append("ℹ️ 这是一条视频笔记。本仓库公开层不含语音转写适配器，"
+            L.append("ℹ️ 这是一条视频笔记。本项目公开层不含语音转写适配器，"
                      "因此不产出逐字稿（原片可直接下载后自行转写）。")
         else:
             L.append("")
@@ -237,7 +238,7 @@ def main(argv=None):
         print(describe())
         print()
         print("私有适配器目录：%s" % USER_ADAPTER_DIR)
-        print("（放进去的 *.py 会在启动时自动加载，无需 fork 本仓库；")
+        print("（放进去的 *.py 会在启动时自动加载，无需修改本项目代码；")
         print("  接口形态见 docs/extending.md）")
         print()
         print("登录态：python3 -m bagaoji --auth")
@@ -263,7 +264,11 @@ def main(argv=None):
         return 0
 
     if args.diagnose:
-        from .diagnose import run as diag_run
+        try:
+            from .diagnose import run as diag_run
+        except ImportError:
+            print("⚠️ 该功能在当前发布版本中未启用。", file=sys.stderr)
+            return 2
         ok, _ = diag_run(as_json=args.json)
         return 0 if ok else 1
 

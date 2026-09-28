@@ -1,6 +1,6 @@
 """引擎：把链接分发给合适的适配器。
 
-分流规则很简单——按域名匹配。匹配不到就明确告诉你「本仓库公开层不含该来源」，
+分流规则很简单——按域名匹配。匹配不到就明确告诉你「本项目公开层不含该来源」，
 而不是抛一个看不懂的异常。
 """
 
@@ -53,7 +53,7 @@ def parse(url, engine=None, **opts):
         known = "、".join(a.label or a.name for a in all_adapters()) or "（无）"
         return MediaResult(
             input_url=link,
-            error=("没有适配器能处理这个链接。本仓库公开层当前覆盖：%s。\n"
+            error=("没有适配器能处理这个链接。本项目公开层当前覆盖：%s。\n"
                    "其它来源的接入方式见 docs/extending.md"
                    "（把自建适配器放到 ~/.bagaoji/adapters/ 即可被自动加载）。" % known),
         )
